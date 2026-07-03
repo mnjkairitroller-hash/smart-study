@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../store';
 import { auth, db } from '../lib/firebase';
-import { collection, query, orderBy, onSnapshot, where, doc, getDoc } from 'firebase/firestore';
-import { LogOut, Palette, Ticket, Shield, Lock, Calendar, CheckCircle2, Clock3, AlertTriangle, Sparkles, PlayCircle, Star, GraduationCap, RefreshCcw, MoreVertical } from 'lucide-react';
+import { collection, query, orderBy, onSnapshot, where, doc, getDoc, getDocs, deleteDoc, setDoc } from 'firebase/firestore';
+import { LogOut, Palette, Ticket, Shield, Lock, Calendar, CheckCircle2, Clock3, AlertTriangle, Sparkles, PlayCircle, Star, GraduationCap, RefreshCcw, MoreVertical, Trash2 } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { getLevelInfo } from '../lib/utils';
 
@@ -115,6 +115,53 @@ export default function ProfileView() {
       return 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30';
     }
     return 'bg-slate-50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 border border-slate-100 dark:border-slate-800/30';
+  };
+
+  const [isResetting, setIsResetting] = useState(false);
+
+  const handleResetData = async () => {
+    if (!user) return;
+    const confirmReset = window.confirm("Are you sure you want to delete ALL your data and start fresh? This action cannot be undone.");
+    if (!confirmReset) return;
+
+    try {
+      setIsResetting(true);
+      // Delete chapters owned by this user
+      const q = query(collection(db, 'chapters'), where('userId', '==', user.uid));
+      const snap = await getDocs(q);
+      const deletePromises = snap.docs.map(document => deleteDoc(doc(db, 'chapters', document.id)));
+      await Promise.all(deletePromises);
+
+      // Reset user data to initial state
+      const initialUserData = {
+          points: 0,
+          level: 1,
+          streak: 0,
+          lastActive: null,
+          completedLessons: [],
+          bookmarkedVideos: [],
+          badges: ['novice_explorer'],
+          currentRoutine: {
+            videos: [],
+            date: new Date().toDateString(),
+            excludedVideoIds: [],
+            pushedVideoIds: []
+          },
+          displayName: user.displayName || user.email?.split('@')[0] || 'Student',
+          photoURL: user.photoURL || ''
+      };
+      
+      const userRef = doc(db, 'users', user.uid);
+      await setDoc(userRef, initialUserData);
+      await refreshUserData();
+      
+      alert("All your data has been reset successfully. You can now start fresh!");
+    } catch (e) {
+      console.error("Error resetting data:", e);
+      alert("Failed to reset data. Please try again.");
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   const extractYtId = (url: string) => {
@@ -1047,10 +1094,20 @@ export default function ProfileView() {
             </div>
           </div>
 
-          <div className="pt-4">
+          <div className="pt-4 space-y-3">
+            <button
+              onClick={handleResetData}
+              disabled={isResetting}
+              className={`w-full py-4 rounded-xl border border-red-500 text-white font-bold flex items-center justify-center gap-2 transition-all shadow-sm ${
+                isResetting ? 'bg-red-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'
+              }`}
+            >
+              <Trash2 size={20} />
+              {isResetting ? 'Resetting Data...' : 'Reset All Data'}
+            </button>
             <button 
               onClick={() => signOut(auth)}
-              className="w-full py-4 rounded-xl border border-red-500/30 text-red-500 font-bold flex items-center justify-center gap-2 hover:bg-red-500 hover:text-white transition-all shadow-sm"
+              className="w-full py-4 rounded-xl border border-slate-500/30 text-slate-500 dark:text-slate-400 font-bold flex items-center justify-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shadow-sm"
             >
               <LogOut size={20} />
               Logout
