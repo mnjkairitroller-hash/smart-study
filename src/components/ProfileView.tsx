@@ -126,10 +126,19 @@ export default function ProfileView() {
 
     try {
       setIsResetting(true);
-      // Delete chapters owned by this user
-      const q = query(collection(db, 'chapters'), where('userId', '==', user.uid));
+      // Delete chapters owned by this user (or legacy chapters if legacy user)
+      const userEmail = user.email?.toLowerCase() || '';
+      const isLegacyUser = userEmail === 'mnjkairitroller@gmail.com' || userEmail === 'mnjkairi1@gmail.com' || userEmail === 'pavanffm@gmail.com';
+      
+      const q = query(collection(db, 'chapters'));
       const snap = await getDocs(q);
-      const deletePromises = snap.docs.map(document => deleteDoc(doc(db, 'chapters', document.id)));
+      const deletePromises = snap.docs.map(document => {
+        const data = document.data();
+        if (data.userId === user.uid || (isLegacyUser && !data.userId)) {
+          return deleteDoc(doc(db, 'chapters', document.id));
+        }
+        return Promise.resolve();
+      });
       await Promise.all(deletePromises);
 
       // Reset user data to initial state
