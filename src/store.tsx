@@ -116,7 +116,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               }
             }
 
-            const finalState = { ...data, streak: newStreak, points: currentPoints, level: currentLevel };
+            const finalState = {
+              ...DEFAULT_USER_DATA,
+              ...data,
+              streak: newStreak,
+              points: currentPoints,
+              level: currentLevel
+            };
             setUserData(finalState);
             setLoading(false);
 

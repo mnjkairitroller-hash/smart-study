@@ -145,19 +145,23 @@ export default function ProfileView() {
       const initialUserData = {
           points: 0,
           level: 1,
-          streak: 0,
-          lastActive: null,
+          streak: 1,
+          lastActive: new Date().toISOString(),
           completedLessons: [],
           bookmarkedVideos: [],
           badges: ['novice_explorer'],
-          currentRoutine: {
-            videos: [],
-            date: new Date().toDateString(),
-            excludedVideoIds: [],
-            pushedVideoIds: []
-          },
+          rewards: [],
+          lessonProgress: {},
+          deletePin: '',
+          subjects: ['Math', 'Science', 'English', 'Computer', 'History'],
+          dailyLessonsCount: 0,
+          currentRoutine: null,
+          lastRoutinePenaltyDate: '',
+          dailyQuizLastCompletedDate: '',
+          redemptionHistory: [],
           displayName: user.displayName || user.email?.split('@')[0] || 'Student',
-          photoURL: user.photoURL || ''
+          photoURL: user.photoURL || '',
+          theme: 'slate'
       };
       
       const userRef = doc(db, 'users', user.uid);
@@ -318,7 +322,7 @@ export default function ProfileView() {
       const isMath = (subject?.toLowerCase() || '').includes('math');
       const requiredVideos = (isMath && !tomorrowEnglishDay) ? 2 : 1;
 
-      const uncompleted = availableForTomorrow[subject];
+      const uncompleted = availableForTomorrow[subject] || [];
       for (let i = 0; i < Math.min(requiredVideos, uncompleted.length); i++) {
         tomorrowLessons.push(uncompleted[i]);
       }
@@ -341,7 +345,7 @@ export default function ProfileView() {
       const isMath = (subject?.toLowerCase() || '').includes('math');
       const requiredVideos = (isMath && !dayAfterEnglishDay) ? 2 : 1;
 
-      const uncompleted = availableForDayAfter[subject];
+      const uncompleted = availableForDayAfter[subject] || [];
       for (let i = 0; i < Math.min(requiredVideos, uncompleted.length); i++) {
         dayAfterLessons.push(uncompleted[i]);
       }

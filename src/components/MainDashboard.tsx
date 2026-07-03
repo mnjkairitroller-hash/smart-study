@@ -189,7 +189,7 @@ export default function MainDashboard({ setTab, setPlayingVideo }: { setTab: (ta
     if (!userData || !userData.currentRoutine) return;
     
     // Set isShifted: true for this video inside currentRoutine.videos
-    const updatedVideos = userData.currentRoutine.videos.map((v: any) => {
+    const updatedVideos = (userData.currentRoutine.videos || []).map((v: any) => {
       if (v.id === videoId) {
         return { ...v, isShifted: true };
       }
@@ -216,7 +216,7 @@ export default function MainDashboard({ setTab, setPlayingVideo }: { setTab: (ta
     if (!userData || !userData.currentRoutine) return;
     
     // Set isDeleted: true for this video instead of completely removing it
-    const updatedVideos = userData.currentRoutine.videos.map((v: any) => {
+    const updatedVideos = (userData.currentRoutine.videos || []).map((v: any) => {
       if (v.id === videoId) {
         return { ...v, isDeleted: true };
       }
@@ -851,7 +851,7 @@ export default function MainDashboard({ setTab, setPlayingVideo }: { setTab: (ta
       const missed: any[] = [];
       let totalDeduction = 0;
 
-      for (const v of currentRoutine.videos) {
+      for (const v of (currentRoutine.videos || [])) {
         if (!completed.includes(v.id)) {
           // If the video was explicitly shifted to next day, do not penalize today!
           if (v.isShifted) {
@@ -883,7 +883,7 @@ export default function MainDashboard({ setTab, setPlayingVideo }: { setTab: (ta
       const freshVideoIds = freshRoutine.map(v => v.id);
 
       // Carry over any uncompleted (missed) lessons from yesterday's routine
-      const shiftedVideos = currentRoutine.videos.filter(v => !completed.includes(v.id));
+      const shiftedVideos = (currentRoutine.videos || []).filter(v => !completed.includes(v.id));
       
       const combinedRoutine = [...freshRoutine];
       shiftedVideos.forEach(shifted => {
@@ -932,7 +932,7 @@ export default function MainDashboard({ setTab, setPlayingVideo }: { setTab: (ta
 
   // Determine explicitly excluded videos (shifted or deleted today)
   const excludedIdsToday = (userData?.currentRoutine?.date === new Date().toDateString())
-    ? userData.currentRoutine.videos.filter((v: any) => v.isShifted || v.isDeleted).map((v: any) => v.id)
+    ? (userData.currentRoutine.videos || []).filter((v: any) => v.isShifted || v.isDeleted).map((v: any) => v.id)
     : [];
 
   const pushedIdsToday = (userData?.currentRoutine?.date === new Date().toDateString())

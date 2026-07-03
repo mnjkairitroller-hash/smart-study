@@ -43,6 +43,7 @@ export function getLevelInfo(points: number) {
 export function getChapterCoverImage(subject: string, title: string): string {
   const s = (subject || '').toLowerCase();
   const t = (title || '').toLowerCase();
+  const titleLen = (title || '').length;
 
   // 1. SPECIFIC TOPIC KEYWORDS (HIGH PRECEDENCE)
   
@@ -79,7 +80,7 @@ export function getChapterCoverImage(subject: string, title: string): string {
       'https://images.unsplash.com/photo-1596497352223-ca35352b07e5?w=300&h=300&fit=crop', // Geometry scale setup
       'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=300&h=300&fit=crop', // Abstract neon spatial vector
     ];
-    return maths[Math.abs(title.length) % maths.length];
+    return maths[Math.abs(titleLen) % maths.length];
   }
 
   if (s.includes('sci') || s.includes('phy') || s.includes('chem') || s.includes('bio') || s.includes('evs')) {
@@ -88,7 +89,7 @@ export function getChapterCoverImage(subject: string, title: string): string {
       'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=300&h=300&fit=crop', // Beautiful glass flask reactions
       'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=300&h=300&fit=crop', // Abstract colorful vector waves
     ];
-    return sciences[Math.abs(title.length) % sciences.length];
+    return sciences[Math.abs(titleLen) % sciences.length];
   }
 
   if (s.includes('eng') || s.includes('lang') || s.includes('lit') || s.includes('poem') || s.includes('stori') || s.includes('hind') || s.includes('sans')) {
@@ -97,7 +98,7 @@ export function getChapterCoverImage(subject: string, title: string): string {
       'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=300&h=300&fit=crop', // Bright library books stacking
       'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&h=300&fit=crop', // Specular writing diary setup
     ];
-    return languages[Math.abs(title.length) % languages.length];
+    return languages[Math.abs(titleLen) % languages.length];
   }
 
   if (s.includes('comp') || s.includes('cod') || s.includes('tech') || s.includes('program')) {
@@ -106,7 +107,7 @@ export function getChapterCoverImage(subject: string, title: string): string {
       'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=300&h=300&fit=crop', // Beautiful coding screen with colors
       'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=300&h=300&fit=crop', // Digital code network matrix
     ];
-    return computers[Math.abs(title.length) % computers.length];
+    return computers[Math.abs(titleLen) % computers.length];
   }
 
   if (s.includes('hist') || s.includes('soc') || s.includes('geog') || s.includes('civ')) {
@@ -115,7 +116,7 @@ export function getChapterCoverImage(subject: string, title: string): string {
       'https://images.unsplash.com/photo-1521295121783-8a321d551ad2?w=300&h=300&fit=crop', // Global mapping earth model
       'https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=300&h=300&fit=crop', // Glowing bookstore setup
     ];
-    return socials[Math.abs(title.length) % socials.length];
+    return socials[Math.abs(titleLen) % socials.length];
   }
 
   // Cute general academic default presets
@@ -124,5 +125,5 @@ export function getChapterCoverImage(subject: string, title: string): string {
     'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=300&h=300&fit=crop', // Chalk kids academic blackboard
     'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=300&h=300&fit=crop', // Dynamic colorful planner table
   ];
-  return defaults[Math.abs(title.length) % defaults.length];
+  return defaults[Math.abs(titleLen) % defaults.length];
 }
