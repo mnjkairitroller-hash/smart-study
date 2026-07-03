@@ -274,35 +274,88 @@ export default function ProfileView() {
     const todayEnglishDay = todayDay === 1 || todayDay === 4;
 
     // Today
-    sortedSubjects.forEach(subject => {
-      const isEnglish = (subject?.toLowerCase() || '').includes('eng');
-      if (isEnglish && !todayEnglishDay) return;
-
-      const isMath = (subject?.toLowerCase() || '').includes('math');
-      const requiredVideos = (isMath && !todayEnglishDay) ? 2 : 1;
-
-      const uncompleted = availableQueues[subject].filter(vid => !pushedIdsToday.includes(vid.id));
-      
-      let processedVideosCount = 0;
-      for (const vid of uncompleted) {
-        if (processedVideosCount < requiredVideos) {
-          processedVideosCount++;
-          if (!excludedIdsToday.includes(vid.id)) {
+    if (userData?.currentRoutine?.date === todayStr && Array.isArray(userData.currentRoutine.videos)) {
+      userData.currentRoutine.videos.forEach((vid: any) => {
+        if (!vid.isShifted && !vid.isDeleted) {
+          let foundVid: any = null;
+          let foundCh: any = null;
+          for (const ch of chapters) {
+            if (ch.videos) {
+              const match = ch.videos.find((v: any) => v.id === vid.id);
+              if (match) {
+                foundVid = match;
+                foundCh = ch;
+                break;
+              }
+            }
+          }
+          if (foundVid && foundCh) {
+            todayLessons.push({
+              ...vid,
+              title: foundVid.title,
+              videoUrl: foundVid.videoUrl,
+              chapterTitle: foundCh.title,
+              subject: foundCh.subject || vid.subject,
+              chapterId: foundCh.id
+            });
+          } else {
             todayLessons.push(vid);
           }
-        } else {
-          break;
-        }
-      }
-    });
-
-    // Add pushed videos
-    if (pushedIdsToday.length > 0) {
-      Object.values(availableQueues).flat().forEach((vid: any) => {
-        if (pushedIdsToday.includes(vid.id) && !todayLessons.some(v => v.id === vid.id)) {
-          todayLessons.push(vid);
         }
       });
+
+      if (pushedIdsToday.length > 0) {
+        chapters.forEach(chapter => {
+          if (chapter.videos) {
+            chapter.videos.forEach((v: any, idx: number) => {
+              if (pushedIdsToday.includes(v.id)) {
+                if (!todayLessons.some(existing => existing.id === v.id)) {
+                  todayLessons.push({
+                    ...v,
+                    subject: chapter.subject,
+                    chapterTitle: chapter.title,
+                    partNumber: idx + 1,
+                    chapterId: chapter.id,
+                    isExtraClass: true,
+                    isPushed: true
+                  });
+                }
+              }
+            });
+          }
+        });
+      }
+    } else {
+      sortedSubjects.forEach(subject => {
+        const isEnglish = (subject?.toLowerCase() || '').includes('eng');
+        if (isEnglish && !todayEnglishDay) return;
+
+        const isMath = (subject?.toLowerCase() || '').includes('math');
+        const requiredVideos = (isMath && !todayEnglishDay) ? 2 : 1;
+
+        const uncompleted = availableQueues[subject].filter(vid => !pushedIdsToday.includes(vid.id));
+        
+        let processedVideosCount = 0;
+        for (const vid of uncompleted) {
+          if (processedVideosCount < requiredVideos) {
+            processedVideosCount++;
+            if (!excludedIdsToday.includes(vid.id)) {
+              todayLessons.push(vid);
+            }
+          } else {
+            break;
+          }
+        }
+      });
+
+      // Add pushed videos
+      if (pushedIdsToday.length > 0) {
+        Object.values(availableQueues).flat().forEach((vid: any) => {
+          if (pushedIdsToday.includes(vid.id) && !todayLessons.some(v => v.id === vid.id)) {
+            todayLessons.push(vid);
+          }
+        });
+      }
     }
 
     // Tomorrow available videos
