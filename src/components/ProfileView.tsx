@@ -52,8 +52,17 @@ export default function ProfileView() {
     if (!user) return;
     const q = query(collection(db, 'chapters'), orderBy('createdAt', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setChapters(list);
+      const allData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+      const userEmail = user.email?.toLowerCase() || '';
+      const isLegacyUser = userEmail === 'mnjkairitroller@gmail.com' || userEmail === 'mnjkairi1@gmail.com' || userEmail === 'pavanffm@gmail.com';
+      
+      const data = allData.filter((ch: any) => {
+        if (ch.userId) {
+          return ch.userId === user.uid;
+        }
+        return isLegacyUser;
+      });
+      setChapters(data);
     }, (err) => {
       console.error("Error fetching chapters for Timetable:", err);
     });
@@ -212,10 +221,18 @@ export default function ProfileView() {
       const isMath = (subject?.toLowerCase() || '').includes('math');
       const requiredVideos = (isMath && !todayEnglishDay) ? 2 : 1;
 
-      const uncompleted = availableQueues[subject].filter(vid => !excludedIdsToday.includes(vid.id) && !pushedIdsToday.includes(vid.id));
+      const uncompleted = availableQueues[subject].filter(vid => !pushedIdsToday.includes(vid.id));
       
-      for (let i = 0; i < Math.min(requiredVideos, uncompleted.length); i++) {
-        todayLessons.push(uncompleted[i]);
+      let processedVideosCount = 0;
+      for (const vid of uncompleted) {
+        if (processedVideosCount < requiredVideos) {
+          processedVideosCount++;
+          if (!excludedIdsToday.includes(vid.id)) {
+            todayLessons.push(vid);
+          }
+        } else {
+          break;
+        }
       }
     });
 

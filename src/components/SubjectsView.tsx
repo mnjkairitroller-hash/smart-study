@@ -476,7 +476,16 @@ export default function SubjectsView({ setTab, setSelectedChapter }: { setTab: (
     if (!user) return;
     const q = query(collection(db, 'chapters'), orderBy('createdAt', 'asc'));
     const unsub = onSnapshot(q, (snap) => {
-      const data = snap.docs.map(document => ({ id: document.id, ...document.data() }));
+      const allData = snap.docs.map(document => ({ id: document.id, ...document.data() as any }));
+      const userEmail = user.email?.toLowerCase() || '';
+      const isLegacyUser = userEmail === 'mnjkairitroller@gmail.com' || userEmail === 'mnjkairi1@gmail.com' || userEmail === 'pavanffm@gmail.com';
+      
+      const data = allData.filter((ch: any) => {
+        if (ch.userId) {
+          return ch.userId === user.uid;
+        }
+        return isLegacyUser;
+      });
       setChapters(data);
     }, (error) => {
       console.error("Error fetching chapters inside SubjectsView:", error);

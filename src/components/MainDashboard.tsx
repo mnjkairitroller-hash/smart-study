@@ -633,8 +633,18 @@ export default function MainDashboard({ setTab, setPlayingVideo }: { setTab: (ta
     if (!user) return;
     const q = query(collection(db, 'chapters'), orderBy('createdAt', 'asc'));
     const unsub = onSnapshot(q, (snap) => {
-      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setChapters(data);
+      const allData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+      const userEmail = user.email?.toLowerCase() || '';
+      const isLegacyUser = userEmail === 'mnjkairitroller@gmail.com' || userEmail === 'mnjkairi1@gmail.com' || userEmail === 'pavanffm@gmail.com';
+      
+      const filteredData = allData.filter((ch: any) => {
+        if (ch.userId) {
+          return ch.userId === user.uid;
+        }
+        return isLegacyUser;
+      });
+      
+      setChapters(filteredData);
       setChaptersLoaded(true);
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, 'chapters');
@@ -745,31 +755,35 @@ export default function MainDashboard({ setTab, setPlayingVideo }: { setTab: (ta
         return timeA - timeB;
       });
 
+      let processedVideosCount = 0;
       const activeVideos = [];
       const requiredVideos = (isMath && !isEnglishDay) ? 2 : 1;
 
       for (const chapter of subjectChapters) {
         if (chapter.videos && chapter.videos.length > 0) {
           const uncompletedVideos = chapter.videos.map((v: any, idx: number) => ({ ...v, partIdx: idx })).filter((video: any) => 
-            !userData.completedLessons?.includes(video.id) && !excludedIds.includes(video.id) && !pushedIds.includes(video.id)
+            !userData.completedLessons?.includes(video.id) && !pushedIds.includes(video.id)
           );
 
           for (const video of uncompletedVideos) {
-            if (activeVideos.length < requiredVideos) {
-              activeVideos.push({
-                ...video,
-                subject: subject,
-                chapterTitle: chapter.title,
-                partNumber: video.partIdx + 1,
-                chapterId: chapter.id,
-                isExtraClass: activeVideos.length >= 1 // first video is index 0 -> false, second video index 1 -> true
-              });
+            if (processedVideosCount < requiredVideos) {
+              processedVideosCount++;
+              if (!excludedIds.includes(video.id)) {
+                activeVideos.push({
+                  ...video,
+                  subject: subject,
+                  chapterTitle: chapter.title,
+                  partNumber: video.partIdx + 1,
+                  chapterId: chapter.id,
+                  isExtraClass: activeVideos.length >= 1
+                });
+              }
             } else {
               break;
             }
           }
 
-          if (activeVideos.length >= requiredVideos) {
+          if (processedVideosCount >= requiredVideos) {
             break;
           }
         }

@@ -74,9 +74,15 @@ export default function AchievementsView() {
         const q = query(collection(db, 'chapters'));
         const snap = await getDocs(q);
         const titles: string[] = [];
-        snap.docs.forEach(doc => {
-          const data = doc.data();
-          if (data.videos) {
+        
+        const userEmail = user.email?.toLowerCase() || '';
+        const isLegacyUser = userEmail === 'mnjkairitroller@gmail.com' || userEmail === 'mnjkairi1@gmail.com' || userEmail === 'pavanffm@gmail.com';
+        
+        snap.docs.forEach(document => {
+          const data = document.data() as any;
+          const isOwner = data.userId ? data.userId === user.uid : isLegacyUser;
+          
+          if (isOwner && data.videos) {
             data.videos.forEach((v: any) => {
               if (userData.completedLessons.includes(v.id)) {
                 titles.push(`${data.subject}: ${v.title}`);

@@ -26,8 +26,18 @@ export default function ChapterDetailsView({ chapter, setTab, setPlayingVideo }:
       orderBy('createdAt', 'asc')
     );
     const unsub = onSnapshot(q, (snap) => {
-      const ids = snap.docs.map(doc => doc.id);
-      const index = ids.indexOf(chapter.id);
+      const allDocs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+      const userEmail = user.email?.toLowerCase() || '';
+      const isLegacyUser = userEmail === 'mnjkairitroller@gmail.com' || userEmail === 'mnjkairi1@gmail.com' || userEmail === 'pavanffm@gmail.com';
+      
+      const filteredIds = allDocs.filter((ch: any) => {
+        if (ch.userId) {
+          return ch.userId === user.uid;
+        }
+        return isLegacyUser;
+      }).map(ch => ch.id);
+      
+      const index = filteredIds.indexOf(chapter.id);
       if (index !== -1) {
         setChapterNumber(index + 1);
       }
@@ -35,7 +45,7 @@ export default function ChapterDetailsView({ chapter, setTab, setPlayingVideo }:
       console.error("Error determining chapter details sequence:", err);
     });
     return () => unsub();
-  }, [chapterData?.subject, chapter.id]);
+  }, [chapterData?.subject, chapter.id, user]);
   const [newUrl, setNewUrl] = useState('');
   const [newTitle, setNewTitle] = useState('');
   const [addLoading, setAddLoading] = useState(false);
