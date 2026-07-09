@@ -118,6 +118,51 @@ export default function ProfileView() {
   };
 
   const [isResetting, setIsResetting] = useState(false);
+  const [isResettingProgress, setIsResettingProgress] = useState(false);
+
+  const handleResetProgress = async () => {
+    if (!user) return;
+    const confirmReset = window.confirm("Are you sure you want to reset your progress? This will reset your points, level, streak, completed lessons, and rewards. Your uploaded chapters, subjects, notes, and parent PIN key will NOT be deleted.");
+    if (!confirmReset) return;
+
+    try {
+      setIsResettingProgress(true);
+
+      // Reset progress fields but KEEP subjects, deletePin, theme, displayName, photoURL
+      const resetUserData = {
+        points: 0,
+        level: 1,
+        streak: 1,
+        lastActive: new Date().toISOString(),
+        completedLessons: [],
+        bookmarkedVideos: [],
+        badges: ['novice_explorer'],
+        rewards: [],
+        lessonProgress: {},
+        deletePin: userData?.deletePin || '',
+        subjects: userData?.subjects || ['Math', 'Science', 'English', 'Computer', 'History'],
+        dailyLessonsCount: 0,
+        currentRoutine: null,
+        lastRoutinePenaltyDate: '',
+        dailyQuizLastCompletedDate: '',
+        redemptionHistory: [],
+        displayName: userData?.displayName || user.displayName || user.email?.split('@')[0] || 'Student',
+        photoURL: userData?.photoURL || user.photoURL || '',
+        theme: userData?.theme || 'slate'
+      };
+
+      const userRef = doc(db, 'users', user.uid);
+      await setDoc(userRef, resetUserData);
+      await refreshUserData();
+
+      alert("Your progress has been reset successfully. Chapters, custom subjects, and parent PIN settings were kept intact!");
+    } catch (e) {
+      console.error("Error resetting progress:", e);
+      alert("Failed to reset progress. Please try again.");
+    } finally {
+      setIsResettingProgress(false);
+    }
+  };
 
   const handleResetData = async () => {
     if (!user) return;
@@ -1162,8 +1207,18 @@ export default function ProfileView() {
 
           <div className="pt-4 space-y-3">
             <button
+              onClick={handleResetProgress}
+              disabled={isResettingProgress || isResetting}
+              className={`w-full py-4 rounded-xl border border-amber-500 text-white font-bold flex items-center justify-center gap-2 transition-all shadow-sm ${
+                isResettingProgress ? 'bg-amber-400 cursor-not-allowed' : 'bg-amber-500 hover:bg-amber-600'
+              }`}
+            >
+              <RefreshCcw size={20} className={isResettingProgress ? "animate-spin" : ""} />
+              {isResettingProgress ? 'Resetting Progress...' : 'Reset Progress Only'}
+            </button>
+            <button
               onClick={handleResetData}
-              disabled={isResetting}
+              disabled={isResetting || isResettingProgress}
               className={`w-full py-4 rounded-xl border border-red-500 text-white font-bold flex items-center justify-center gap-2 transition-all shadow-sm ${
                 isResetting ? 'bg-red-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'
               }`}
